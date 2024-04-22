@@ -6,3 +6,7 @@ args = parser.parse_args()                                                      
 
 # Now we create a method of parsing through the input file
 # We only need to recognize the keyword "read" and "write"
+
+# https://www.geeksforgeeks.org/read-a-file-line-by-line-in-python/#
+input = open(args.input_file, 'r')
+Lines = input.readlines()
