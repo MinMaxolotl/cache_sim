@@ -44,26 +44,37 @@ index_bits = [7, 6, 5, 3]
 
 tag_bits = 22
 
+# In direct mapped, we have two columns the size of # of blocks, one of them being for tag, the other for data
+# I create a cache table for each block size, and can be accessed by calling cache[0-4][tag][data]
+# The enture cache is empty, and filled with None values
+
+tag_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
+data_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
+
+cache = [[tag_col[0], data_col[0]], [tag_col[1], data_col[1]], [tag_col[2], data_col[2]], [tag_col[3], data_col[3]]]
+
 # Order of address goes as such: tag -> index -> offset
 
 # I now create a function that will perform the bulk of the work
 def read(address):
     print("reading")
 
+
 def write(address):
     print("writing")
+
+def results():
+    print("test")
 
 def parse(line):
     words = line.split()
     if words[0] == "read":
         read(words[1])
-        
-    elif words[1] == "write":
+        results()
+
+    elif words[0] == "write":
         write(words[1])
-
-
-     
-
+        results()
 
 
 # Now we create a method of parsing through the input file
@@ -73,9 +84,7 @@ def parse(line):
 input = open(args.input_file, 'r')
 Lines = input.readlines()
 
-
-
 for line in Lines:
-    print(line)
+    parse(line)
 
     
