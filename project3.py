@@ -46,10 +46,24 @@ tag_bits = 22
 
 # Order of address goes as such: tag -> index -> offset
 
-
 # I now create a function that will perform the bulk of the work
+def read(address):
+    print("reading")
 
-def parse_and_eval(line):
+def write(address):
+    print("writing")
+
+def parse(line):
+    words = line.split()
+    if words[0] == "read":
+        read(words[1])
+        
+    elif words[1] == "write":
+        write(words[1])
+
+
+     
+
 
 
 # Now we create a method of parsing through the input file
@@ -62,6 +76,6 @@ Lines = input.readlines()
 
 
 for line in Lines:
-    print("test")
+    print(line)
 
     
