@@ -17,6 +17,7 @@
 
 # Argparser tutorial from https://www.codium.ai/blog/creating-powerful-command-line-tools-in-python-a-practical-guide/
 import argparse
+import math
 parser = argparse.ArgumentParser(description='This is a new command-line tool') # Creates an argparser object
 parser.add_argument('input_file', help='Path to the input file')                # Adds an arguement to accept an input file
 args = parser.parse_args()                                                      # Gathers arguements that can be called from args object
@@ -44,37 +45,65 @@ index_bits = [7, 6, 5, 3]
 
 tag_bits = 22
 
+# Order of address goes as such: tag -> index -> offset
+
+# Next I want to set up all the other variables that I will be printing after a read or write completes
+mapping_type = "DM" # Always DM in my case
+write_policy = "WB" # Alwaays WB in my case
+hit_rate = 0.00     # This will be modified, percentage of cache hit
+MemToCache = 0      # This will be modified, number of bytes put into cache from memory
+CahceToMem = 0      # This will be modified, number of bytes put into memory from cache
+
+# Other output variables is cache size, block size, and number of blocks, which are all created above
+
+
 # In direct mapped, we have two columns the size of # of blocks, one of them being for tag, the other for data
-# I create a cache table for each block size, and can be accessed by calling cache[0-4][tag][data]
+# I create a cache table for each block size, and can be accessed by calling cache[0-4][tag][index][offset]
 # The enture cache is empty, and filled with None values
 
 tag_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
-data_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
+v_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
+cache_data = [[[None] * num_blocks[0], [None] * b_size[0]], [[None] * num_blocks[1], [None] * b_size[1]], [[None] * num_blocks[2], [None] * b_size[2]], [[None] * num_blocks[3], [None] * b_size[3]]]
 
-cache = [[tag_col[0], data_col[0]], [tag_col[1], data_col[1]], [tag_col[2], data_col[2]], [tag_col[3], data_col[3]]]
 
-# Order of address goes as such: tag -> index -> offset
 
 # I now create a function that will perform the bulk of the work
-def read(address):
+def read(address, setting):
     print("reading")
 
+    # Caclcualate the tag, block index, and block offset so we can check if the cache contains the data
+    tag = math.floor(address/c_size)
+    block_index = math.floor(address/b_size[setting]) % num_blocks[setting]
+    block_offset = address % b_size[setting]
 
-def write(address):
+    #If theres nothing in the cache at that location, then its a cache miss
+    #If the verify bit is zero at the block index, then its a cache miss
+    #If the tags do not match at the block index, then its a cache mis
+        
+    if ((cache_data[setting][block_index][block_offset] == None) or (v_col[setting][block_index] == 0) or (tag != tag_col[setting][block_index])): 
+         # When there is a cache miss, we pull data from memory and fill the cache
+        MemToCache += b_size[setting]
+
+def write(address, setting):
     print("writing")
 
-def results():
-    print("test")
+def results(setting):
+    # Print the final results
+    print(f"{c_size} {b_size[setting]} {mapping_type} {write_policy} {hit_rate} {MemToCache} {CahceToMem}")
 
-def parse(line):
+    # reset the values back to initial state
+    hit_rate = 0.00     # This will be modified, percentage of cache hit
+    MemToCache = 0      # This will be modified, number of bytes put into cache from memory
+    CahceToMem = 0      # This will be modified, number of bytes put into memory from cache
+    
+
+def parse(line, setting): # Setting will be between 0 and 3 to account for the block size we are working with
     words = line.split()
     if words[0] == "read":
-        read(words[1])
-        results()
+        read(words[1][2:], setting) # The [2:] is so that we remove the 0x part of the address
 
     elif words[0] == "write":
-        write(words[1])
-        results()
+        write(words[1][2:], setting)
 
 
 # Now we create a method of parsing through the input file
@@ -85,6 +114,23 @@ input = open(args.input_file, 'r')
 Lines = input.readlines()
 
 for line in Lines:
-    parse(line)
+    parse(line, 0)
+
+results(0)
+
+for line in Lines:
+    parse(line, 1)
+
+results(1)
+
+for line in Lines:
+    parse(line, 2)
+
+results(2)
+
+for line in Lines:
+    parse(line, 3)
+
+results(3)
 
     
