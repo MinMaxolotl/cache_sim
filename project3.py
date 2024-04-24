@@ -120,15 +120,17 @@ def write(address, setting): # We use the write back methodology#
     global MemToCache
     global CacheToMem
 
+    # Solve for the tag, index, and offset from the address
     tag = int(address, 16) // c_size 
     block_index = (int(address, 16) // b_size[setting]) % num_blocks[setting]
     block_offset = int(address, 16) % words_per_index[setting]
 
+    # If the tag solved for and the tag at the block location are the same, it is a hit and we can write data
     if cache_data[setting][block_index]['tag'] == tag:
         cache_data[setting][block_index]['data'][block_offset] = "fake_data"
         v_col[setting][block_index] = 1
         hit_rate[setting] += 1
-    else:
+    else: #If the tags are different, then we must perform eviction and thus pull data from the memory into the cache
         MemToCache += 1
 
     CacheToMem += 1
