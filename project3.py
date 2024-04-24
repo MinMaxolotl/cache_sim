@@ -59,9 +59,9 @@ CacheToMem = 0      # This will be modified, number of bytes put into memory fro
 
 
 # In direct mapped, we have two columns the size of # of blocks, one of them being for tag, the other for data
-# At every index, there is a tag and data, thus, I make the cache such that we can reference either the tag or data given an index
-# We can reference tag with: cache_data[setting][index][0]
-# We can reference data with: cahce_data[setting][index][1][offset]
+# At every index, there is a tag and data, thus, I make the cache a dictionary such that we can reference either the tag or data given an index
+# We can reference tag with: cache_data[setting][index]['tag']
+# We can reference data with: cahce_data[setting][index]['data'][offset]
 # We mutliply the data blocks with the number of words used, then the whole set of tag and data with the number of blocks
 # I also include a verify column to keep track of used indexes
 
