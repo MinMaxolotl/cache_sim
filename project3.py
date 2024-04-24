@@ -66,7 +66,10 @@ CacheToMem = 0      # This will be modified, number of bytes put into memory fro
 # I also include a verify column to keep track of used indexes
 
 
-cache_data = [{None, [None] * blocks_per_index[0]} * num_blocks[0], {None, [None] * blocks_per_index[1]} * num_blocks[1], {None, [None] * blocks_per_index[2]} * num_blocks[2], {None, [None] * blocks_per_index[3]} * num_blocks[3]]
+cache_data = [[{'tag': None, 'data': [None] * blocks_per_index[0]} for x in range(num_blocks[0])], 
+              [{'tag': None, 'data': [None] * blocks_per_index[1]} for x in range(num_blocks[1])], 
+              [{'tag': None, 'data': [None] * blocks_per_index[2]} for x in range(num_blocks[2])], 
+              [{'tag': None, 'data': [None] * blocks_per_index[3]} for x in range(num_blocks[3])]]
 
 v_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
 
