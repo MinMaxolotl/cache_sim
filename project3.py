@@ -52,30 +52,29 @@ mapping_type = "DM" # Always DM in my case
 write_policy = "WB" # Alwaays WB in my case
 hit_rate = 0.00     # This will be modified, percentage of cache hit
 MemToCache = 0      # This will be modified, number of bytes put into cache from memory
-CahceToMem = 0      # This will be modified, number of bytes put into memory from cache
+CacheToMem = 0      # This will be modified, number of bytes put into memory from cache
 
 # Other output variables is cache size, block size, and number of blocks, which are all created above
 
 
 # In direct mapped, we have two columns the size of # of blocks, one of them being for tag, the other for data
-# I create a cache table for each block size, and can be accessed by calling cache[0-4][tag][index][offset]
-# The enture cache is empty, and filled with None values
+# At every index, there is a tag and data, thus, I make the cache such that we can reference either the tag or data given an index
+# We can reference tag with: cache_data[setting][index][0]
+# We can reference data with: cahce_data[setting][index][1]
+# We mutliply the data blocks with the number of words used, then the whole set of tag and data with the number of blocks
 
-tag_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
-v_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
 
-block = [[None]*b_size[0], [None]*b_size[1], [None]*b_size[2], [None]*b_size[3]]
-
-cache_data = [[block[0]*num_blocks[0]], [block[1]*num_blocks[1]], [block[2]*num_blocks[2]], [block[3]*num_blocks[3]]]
+cache_data = [{None, [None] * 2} * num_blocks[0], {None, [None] * 4} * num_blocks[1], {None, [None] * 8} * num_blocks[2], {None, [None] * 32} * num_blocks[3]]
 
 
 
 # I now create a function that will perform the bulk of the work
 def read(address, setting):
     print("reading")
+    global MemToCache
 
     # Caclcualate the tag, block index, and block offset so we can check if the cache contains the data
-    tag = int(address) // c_size
+    tag = int(address) >> (index_bits[setting] + offset_bits[setting])
     block_index = (int(address) // b_size[setting]) % num_blocks[setting]
     block_offset = int(address) % b_size[setting]
 
@@ -103,12 +102,15 @@ def write(address, setting): # We use the write back methodology
 
 def results(setting):
     # Print the final results
+    global hit_rate
+    global MemToCache
+    global CacheToMem
     print(f"{c_size} {b_size[setting]} {mapping_type} {write_policy} {hit_rate} {MemToCache} {CahceToMem}")
 
     # reset the values back to initial state
     hit_rate = 0.00     # This will be modified, percentage of cache hit
     MemToCache = 0      # This will be modified, number of bytes put into cache from memory
-    CahceToMem = 0      # This will be modified, number of bytes put into memory from cache
+    CacheToMem = 0      # This will be modified, number of bytes put into memory from cache
     
 
 def parse(line, setting): # Setting will be between 0 and 3 to account for the block size we are working with
