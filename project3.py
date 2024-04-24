@@ -79,20 +79,25 @@ def read(address, setting):
     global MemToCache
 
     # Caclcualate the tag, block index, and block offset so we can check if the cache contains the data
-    tag = int(address) >> (index_bits[setting] + offset_bits[setting])
-    block_index = (int(address) // b_size[setting]) % num_blocks[setting]
-    block_offset = int(address) % b_size[setting]
+    tag = int(address, 16) // c_size
+    block_index = (int(address, 16) // b_size[setting]) % num_blocks[setting]
+    block_offset = int(address, 16) % b_size[setting]
+
+    print(address)
+    print(tag)
+    print(block_index)
+    print(block_offset)
 
     #If theres nothing in the cache at that location, then its a cache miss
     #If the verify bit is zero at the block index, then its a cache miss
     #If the tags do not match at the block index, then its a cache miss
         
-    if ((v_col[setting][block_index] == 0) or (tag != cache_data[setting][block_index][0]) or (cache_data[setting][block_index][1][block_offset] == None)): 
+    if ((v_col[setting][block_index] == 0) or (tag != cache_data[setting][block_index]['tag']) or (cache_data[setting][block_index]['data'][block_offset] == None)): 
         # When there is a cache miss, we pull data from memory and fill the cache, I use a filler value of "fake_data"
         MemToCache += + b_size[setting]
 
-        cache_data[setting][block_index][1] = ["fake_data"] * (blocks_per_index[setting]) # For each block at this index, we fill in the data 
-        cache_data[setting][block_index][0] = tag # We set the tag value as the one we solved for earlier
+        cache_data[setting][block_index]['data'] = ["fake_data"] * (blocks_per_index[setting]) # For each block at this index, we fill in the data 
+        cache_data[setting][block_index]['tag'] = tag # We set the tag value as the one we solved for earlier
         v_col[setting][block_index] = 1 # after filling the blocks, we set v = 1
         
         
