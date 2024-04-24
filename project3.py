@@ -17,7 +17,7 @@
 
 # Argparser tutorial from https://www.codium.ai/blog/creating-powerful-command-line-tools-in-python-a-practical-guide/
 import argparse
-import math
+
 parser = argparse.ArgumentParser(description='This is a new command-line tool') # Creates an argparser object
 parser.add_argument('input_file', help='Path to the input file')                # Adds an arguement to accept an input file
 args = parser.parse_args()                                                      # Gathers arguements that can be called from args object
@@ -63,7 +63,10 @@ CahceToMem = 0      # This will be modified, number of bytes put into memory fro
 
 tag_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
 v_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
-cache_data = [[[None] * num_blocks[0], [None] * b_size[0]], [[None] * num_blocks[1], [None] * b_size[1]], [[None] * num_blocks[2], [None] * b_size[2]], [[None] * num_blocks[3], [None] * b_size[3]]]
+
+block = [[None]*b_size[0], [None]*b_size[1], [None]*b_size[2], [None]*b_size[3]]
+
+cache_data = [[block[0]*num_blocks[0]], [block[1]*num_blocks[1]], [block[2]*num_blocks[2]], [block[3]*num_blocks[3]]]
 
 
 
@@ -72,19 +75,30 @@ def read(address, setting):
     print("reading")
 
     # Caclcualate the tag, block index, and block offset so we can check if the cache contains the data
-    tag = math.floor(address/c_size)
-    block_index = math.floor(address/b_size[setting]) % num_blocks[setting]
-    block_offset = address % b_size[setting]
+    tag = int(address) // c_size
+    block_index = (int(address) // b_size[setting]) % num_blocks[setting]
+    block_offset = int(address) % b_size[setting]
 
     #If theres nothing in the cache at that location, then its a cache miss
     #If the verify bit is zero at the block index, then its a cache miss
-    #If the tags do not match at the block index, then its a cache mis
+    #If the tags do not match at the block index, then its a cache miss
         
-    if ((cache_data[setting][block_index][block_offset] == None) or (v_col[setting][block_index] == 0) or (tag != tag_col[setting][block_index])): 
-         # When there is a cache miss, we pull data from memory and fill the cache
-        MemToCache += b_size[setting]
+    if ((v_col[setting][block_index] == 0) or (tag != tag_col[setting][block_index])): 
+        # When there is a cache miss, we pull data from memory and fill the cache, I use a filler value of 1
+        MemToCache = MemToCache + b_size[setting]
 
-def write(address, setting):
+        # # Loop that fills out the entire block
+        # i = 0
+        # while i < (b_size[setting]/4):
+        #     cache_data[setting][block_index][i] = 1
+        #     i += 4
+        
+        tag_col[setting][block_index] = tag # We set the tag value as the one we solved for earlier
+        v_col[setting][block_index] = 1 # after filling the blocks, we set v = 1
+        
+        
+
+def write(address, setting): # We use the write back methodology
     print("writing")
 
 def results(setting):
@@ -112,25 +126,12 @@ def parse(line, setting): # Setting will be between 0 and 3 to account for the b
 # https://www.geeksforgeeks.org/read-a-file-line-by-line-in-python/#
 input = open(args.input_file, 'r')
 Lines = input.readlines()
+counter = 0
 
-for line in Lines:
-    parse(line, 0)
+while counter < 4:
+    for line in Lines:
+        parse(line, counter)
 
-results(0)
-
-for line in Lines:
-    parse(line, 1)
-
-results(1)
-
-for line in Lines:
-    parse(line, 2)
-
-results(2)
-
-for line in Lines:
-    parse(line, 3)
-
-results(3)
-
+    results(counter)
+    counter += 1
     
