@@ -25,6 +25,7 @@ args = parser.parse_args()                                                      
 # Next I will initalize the states for all of the caches I will be testing
 c_size = 1024
 b_size = [8, 16, 32, 128]
+blocks_per_index = [2, 4, 8, 32]
 
 # Address bits: 8 bytes = 32 bits
 # Size of each way = cache_ size / # ways 
@@ -60,13 +61,14 @@ CacheToMem = 0      # This will be modified, number of bytes put into memory fro
 # In direct mapped, we have two columns the size of # of blocks, one of them being for tag, the other for data
 # At every index, there is a tag and data, thus, I make the cache such that we can reference either the tag or data given an index
 # We can reference tag with: cache_data[setting][index][0]
-# We can reference data with: cahce_data[setting][index][1]
+# We can reference data with: cahce_data[setting][index][1][offset]
 # We mutliply the data blocks with the number of words used, then the whole set of tag and data with the number of blocks
+# I also include a verify column to keep track of used indexes
 
 
-cache_data = [{None, [None] * 2} * num_blocks[0], {None, [None] * 4} * num_blocks[1], {None, [None] * 8} * num_blocks[2], {None, [None] * 32} * num_blocks[3]]
+cache_data = [{None, [None] * blocks_per_index[0]} * num_blocks[0], {None, [None] * blocks_per_index[1]} * num_blocks[1], {None, [None] * blocks_per_index[2]} * num_blocks[2], {None, [None] * blocks_per_index[3]} * num_blocks[3]]
 
-
+v_col = [[None] * num_blocks[0], [None] * num_blocks[1], [None] * num_blocks[2], [None] * num_blocks[3]]
 
 # I now create a function that will perform the bulk of the work
 def read(address, setting):
@@ -82,17 +84,12 @@ def read(address, setting):
     #If the verify bit is zero at the block index, then its a cache miss
     #If the tags do not match at the block index, then its a cache miss
         
-    if ((v_col[setting][block_index] == 0) or (tag != tag_col[setting][block_index])): 
-        # When there is a cache miss, we pull data from memory and fill the cache, I use a filler value of 1
-        MemToCache = MemToCache + b_size[setting]
+    if ((v_col[setting][block_index] == 0) or (tag != cache_data[setting][block_index][0]) or (cache_data[setting][block_index][1][block_offset] == None)): 
+        # When there is a cache miss, we pull data from memory and fill the cache, I use a filler value of "fake_data"
+        MemToCache += + b_size[setting]
 
-        # # Loop that fills out the entire block
-        # i = 0
-        # while i < (b_size[setting]/4):
-        #     cache_data[setting][block_index][i] = 1
-        #     i += 4
-        
-        tag_col[setting][block_index] = tag # We set the tag value as the one we solved for earlier
+        cache_data[setting][block_index][1] = ["fake_data"] * (blocks_per_index[setting]) # For each block at this index, we fill in the data 
+        cache_data[setting][block_index][0] = tag # We set the tag value as the one we solved for earlier
         v_col[setting][block_index] = 1 # after filling the blocks, we set v = 1
         
         
@@ -105,7 +102,7 @@ def results(setting):
     global hit_rate
     global MemToCache
     global CacheToMem
-    print(f"{c_size} {b_size[setting]} {mapping_type} {write_policy} {hit_rate} {MemToCache} {CahceToMem}")
+    print(f"{c_size} {b_size[setting]} {mapping_type} {write_policy} {hit_rate} {MemToCache} {CacheToMem}")
 
     # reset the values back to initial state
     hit_rate = 0.00     # This will be modified, percentage of cache hit
